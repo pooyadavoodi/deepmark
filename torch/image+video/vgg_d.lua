@@ -30,6 +30,19 @@ local function vgg(nGPU)
       end
    end
 
+   if nGPU > 1 then
+      assert(nGPU <= cutorch.getDeviceCount(), 'number of GPUs less than nGPU specified')
+      local features_single = features
+      features = nn.DataParallelTable(1)
+      for i=1,nGPU do
+          cutorch.setDevice(i)
+          features:add(features_single:clone(), i)
+      end
+      features.gradInput = nil
+      features.flattenParams = true
+      cutorch.setDevice(1)
+   end
+
    features:get(1).gradInput = nil
 
    local classifier = nn.Sequential()

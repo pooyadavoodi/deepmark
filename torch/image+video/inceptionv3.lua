@@ -69,6 +69,18 @@ local function construct(nGPU)
    net:add(nn.View(-1):setNumInputDims(3))
    net:add(nn.Linear(2048, 1008))
 
+   if nGPU > 1 then
+      assert(nGPU <= cutorch.getDeviceCount(), 'number of GPUs less than nGPU specified')
+      local net_single = net
+      net = nn.DataParallelTable(1)
+      for i=1,nGPU do
+          cutorch.setDevice(i)
+          net:add(net_single:clone(), i)
+      end
+      net.flattenParams = true
+      cutorch.setDevice(1)
+   end
+
    net.gradInput = nil
 
    return net, {3, 299, 299}

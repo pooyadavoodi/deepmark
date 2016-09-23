@@ -91,6 +91,19 @@ local function createModel(nGPU)
    model:add(nn.View(nFeatures):setNumInputDims(3))
    model:add(nn.Linear(nFeatures, 1000))
 
+   if nGPU > 1 then
+      assert(nGPU <= cutorch.getDeviceCount(), 'number of GPUs less than nGPU specified')
+      local model_single = model
+      model = nn.DataParallelTable(1)
+      for i=1,nGPU do
+          cutorch.setDevice(i)
+          model:add(model_single:clone(), i)
+      end
+      model.gradInput = nil
+      model.flattenParams = true
+      cutorch.setDevice(1)
+   end
+
    model:get(1).gradInput = nil
 
    return model, {3, 224, 224}
