@@ -34,7 +34,7 @@ local function c3d(nGPU)
    local model = nn.Sequential()
    model:add(features):add(classifier)
 
-   return model, {30,3,16,112,112}
+   return model, {3,16,112,112}
 end
 
 return c3d

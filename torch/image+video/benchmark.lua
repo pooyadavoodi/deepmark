@@ -11,9 +11,11 @@ local opt = pl.lapp[[
    --backend (default "cudnn") backend type: cunn | cudnn
    --dryrun  (default 10) number of iterations of a dry run not counted towards final timing
    --iterations (default 10) number of iterations to time and average over
+   --batchsize (default 32) batch size
 ]]
 
 local net, isize = require(opt.network)()
+table.insert(isize, 1, opt.batchsize)
 
 -- randomly initialized input
 local input  = torch.randn(unpack(isize))

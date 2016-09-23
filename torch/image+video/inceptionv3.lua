@@ -71,7 +71,7 @@ local function construct(nGPU)
 
    net.gradInput = nil
 
-   return net, {32, 3, 299, 299}
+   return net, {3, 299, 299}
 end
 
 return construct

@@ -93,7 +93,7 @@ local function createModel(nGPU)
 
    model:get(1).gradInput = nil
 
-   return model, {64, 3, 224, 224}
+   return model, {3, 224, 224}
 end
 
 return createModel

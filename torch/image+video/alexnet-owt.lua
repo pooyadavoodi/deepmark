@@ -69,7 +69,8 @@ local function alexnet(nGPU)
    local model = nn.Sequential()
    model:add(features):add(classifier)
 
-   return model, {256,3,224,224}
+--   return model, {256,3,224,224}
+   return model, {3,224,224}
 end
 
 return alexnet

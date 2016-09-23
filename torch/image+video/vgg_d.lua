@@ -45,7 +45,7 @@ local function vgg(nGPU)
    local model = nn.Sequential()
    model:add(features):add(classifier)
 
-   return model, {64,3,224,224}
+   return model, {3,224,224}
 end
 
 return vgg
