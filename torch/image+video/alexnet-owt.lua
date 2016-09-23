@@ -2,7 +2,6 @@ local function alexnet(nGPU)
    -- from https://code.google.com/p/cuda-convnet2/source/browse/layers/layers-imagenet-1gpu.cfg
    -- this is AlexNet that was presented in the One Weird Trick paper. http://arxiv.org/abs/1404.5997
    require 'cudnn'
-   nGPU = 2
    local features = nn.Sequential()
    features:add(nn.SpatialConvolution(3,64,11,11,4,4,2,2))       -- 224 -> 55
    features:add(nn.ReLU(true))
@@ -21,24 +20,14 @@ local function alexnet(nGPU)
    if nGPU > 1 then
       assert(nGPU <= cutorch.getDeviceCount(), 'number of GPUs less than nGPU specified')
       local features_single = features
-      local gpus = torch.range(0, nGPU-1):totable()
-      local fastest, benchmark = cudnn.fastest, cudnn.benchmark
-      local dpt = nn.DataParallelTable(1, true, true):add(features_single,gpus):threads(function()
-            local cudnn = require 'cudnn'
-            cudnn.fastest, cudnn.benchmark = fastest, benchmark
-         end)
-      dpt.gradInput = nil
-      features = dpt:cuda()
--- [[
       features = nn.DataParallelTable(1)
       for i=1,nGPU do
-         cutorch.withDevice(i, function()
-                               features:add(features_single:clone(), i)
-         end)
+          cutorch.setDevice(i)
+          features:add(features_single:clone(), i)
       end
       features.gradInput = nil
       features.flattenParams = true
--- ]]
+      cutorch.setDevice(1)
    end
 
    local classifier = nn.Sequential()
@@ -69,7 +58,6 @@ local function alexnet(nGPU)
    local model = nn.Sequential()
    model:add(features):add(classifier)
 
---   return model, {256,3,224,224}
    return model, {3,224,224}
 end
 

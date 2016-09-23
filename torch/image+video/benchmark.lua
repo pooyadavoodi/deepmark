@@ -11,11 +11,12 @@ local opt = pl.lapp[[
    --backend (default "cudnn") backend type: cunn | cudnn
    --dryrun  (default 10) number of iterations of a dry run not counted towards final timing
    --iterations (default 10) number of iterations to time and average over
-   --batchsize (default 32) batch size
+   --batchSize (default 32) batch size
+   --nGPU (default 1) number of GPUs 
 ]]
 
-local net, isize = require(opt.network)()
-table.insert(isize, 1, opt.batchsize)
+local net, isize = require(opt.network)(opt.nGPU)
+table.insert(isize, 1, opt.batchSize)
 
 -- randomly initialized input
 local input  = torch.randn(unpack(isize))
