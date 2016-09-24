@@ -74,8 +74,8 @@ end
 local iter_time_taken = tm:time().real / opt.iterations
 local examples_per_sec = 1 / iter_time_taken * opt.batchSize
 
-print(string.format("Arch: %15s      Backend: %10s %25s %10.2f %25s %10d",
-                    opt.network, opt.backend, 
+print(string.format("Arch: %15s      Batchsize: %8d      Backend: %10s %25s %10.2f %25s %10d",
+                    opt.network, opt.batchSize, opt.backend,
                     ':Iter (ms) :', iter_time_taken * 1000,
                     ':exmpl/s (ms) :', examples_per_sec))
 print('')
