@@ -1,4 +1,4 @@
-local function vgg(nGPU)
+local function vgg(opt)
    local modelType = 'D'
 
    -- Create tables describing VGG configurations A, B, D, E
@@ -30,17 +30,9 @@ local function vgg(nGPU)
       end
    end
 
-   if nGPU > 1 then
-      assert(nGPU <= cutorch.getDeviceCount(), 'number of GPUs less than nGPU specified')
-      local features_single = features
-      features = nn.DataParallelTable(1)
-      for i=1,nGPU do
-          cutorch.setDevice(i)
-          features:add(features_single:clone(), i)
-      end
-      features.gradInput = nil
-      features.flattenParams = true
-      cutorch.setDevice(1)
+   if opt.nGPU > 1 then
+       local helpers = require("helpers")
+       features = helpers.setMultiGPU(opt, features)
    end
 
    features:get(1).gradInput = nil

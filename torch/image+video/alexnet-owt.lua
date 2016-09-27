@@ -1,4 +1,4 @@
-local function alexnet(nGPU)
+local function alexnet(opt)
    -- from https://code.google.com/p/cuda-convnet2/source/browse/layers/layers-imagenet-1gpu.cfg
    -- this is AlexNet that was presented in the One Weird Trick paper. http://arxiv.org/abs/1404.5997
    require 'cudnn'
@@ -17,17 +17,9 @@ local function alexnet(nGPU)
    features:add(nn.ReLU(true))
    features:add(nn.SpatialMaxPooling(3,3,2,2))                   -- 13 -> 6
 
-   if nGPU > 1 then
-      assert(nGPU <= cutorch.getDeviceCount(), 'number of GPUs less than nGPU specified')
-      local features_single = features
-      features = nn.DataParallelTable(1)
-      for i=1,nGPU do
-          cutorch.setDevice(i)
-          features:add(features_single:clone(), i)
-      end
-      features.gradInput = nil
-      features.flattenParams = true
-      cutorch.setDevice(1)
+   if opt.nGPU > 1 then
+       local helpers = require("helpers")
+       features = helpers.setMultiGPU(opt, features)
    end
 
    local classifier = nn.Sequential()

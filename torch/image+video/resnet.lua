@@ -7,7 +7,7 @@ local ReLU = nn.ReLU
 local Max = nn.SpatialMaxPooling
 local SBatchNorm = nn.SpatialBatchNormalization
 
-local function createModel(nGPU)
+local function createModel(opt)
    local depth = 50
    local shortcutType = 'B'
    local iChannels
@@ -91,17 +91,9 @@ local function createModel(nGPU)
    model:add(nn.View(nFeatures):setNumInputDims(3))
    model:add(nn.Linear(nFeatures, 1000))
 
-   if nGPU > 1 then
-      assert(nGPU <= cutorch.getDeviceCount(), 'number of GPUs less than nGPU specified')
-      local model_single = model
-      model = nn.DataParallelTable(1)
-      for i=1,nGPU do
-          cutorch.setDevice(i)
-          model:add(model_single:clone(), i)
-      end
-      model.gradInput = nil
-      model.flattenParams = true
-      cutorch.setDevice(1)
+   if opt.nGPU > 1 then
+       local helpers = require("helpers")
+       model = helpers.setMultiGPU(opt, model)
    end
 
    model:get(1).gradInput = nil

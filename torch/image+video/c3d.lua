@@ -1,4 +1,4 @@
-local function c3d(nGPU)
+local function c3d(opt)
    -- Create table describing C3D configuration
    local cfg = {64, 'M1', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'}
 
@@ -19,17 +19,9 @@ local function c3d(nGPU)
       end
    end
 
-   if nGPU > 1 then
-      assert(nGPU <= cutorch.getDeviceCount(), 'number of GPUs less than nGPU specified')
-      local features_single = features
-      features = nn.DataParallelTable(1)
-      for i=1,nGPU do
-          cutorch.setDevice(i)
-          features:add(features_single:clone(), i)
-      end
-      features.gradInput = nil
-      features.flattenParams = true
-      cutorch.setDevice(1)
+   if opt.nGPU > 1 then
+       local helpers = require("helpers")
+       features = helpers.setMultiGPU(opt, features)
    end
 
    features:get(1).gradInput = nil

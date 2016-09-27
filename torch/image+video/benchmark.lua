@@ -15,7 +15,7 @@ local opt = pl.lapp[[
    --nGPU (default 1) number of GPUs 
 ]]
 
-local net, isize = require(opt.network)(opt.nGPU)
+local net, isize = require(opt.network)(opt)
 table.insert(isize, 1, opt.batchSize)
 
 -- randomly initialized input

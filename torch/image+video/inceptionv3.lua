@@ -1,6 +1,6 @@
 require 'nn'
 
-local function construct(nGPU)
+local function construct(opt)
    local json = require 'cjson'
    local f = io.open('inceptionv3.json')
    local config_str = f:read("*all")
@@ -69,16 +69,9 @@ local function construct(nGPU)
    net:add(nn.View(-1):setNumInputDims(3))
    net:add(nn.Linear(2048, 1008))
 
-   if nGPU > 1 then
-      assert(nGPU <= cutorch.getDeviceCount(), 'number of GPUs less than nGPU specified')
-      local net_single = net
-      net = nn.DataParallelTable(1)
-      for i=1,nGPU do
-          cutorch.setDevice(i)
-          net:add(net_single:clone(), i)
-      end
-      net.flattenParams = true
-      cutorch.setDevice(1)
+   if opt.nGPU > 1 then
+       local helpers = require("helpers")
+       net = helpers.setMultiGPU(opt, net)
    end
 
    net.gradInput = nil
