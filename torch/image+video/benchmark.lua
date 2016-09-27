@@ -11,9 +11,12 @@ local opt = pl.lapp[[
    --backend (default "cudnn") backend type: cunn | cudnn
    --dryrun  (default 10) number of iterations of a dry run not counted towards final timing
    --iterations (default 10) number of iterations to time and average over
+   --batchSize (default 32) batch size
+   --nGPU (default 1) number of GPUs 
 ]]
 
-local net, isize = require(opt.network)()
+local net, isize = require(opt.network)(opt)
+table.insert(isize, 1, opt.batchSize)
 
 -- randomly initialized input
 local input  = torch.randn(unpack(isize))
@@ -68,9 +71,11 @@ for t = 1, opt.iterations do
    optim.sgd(feval, params, optimState)
    cutorch.synchronize()
 end
-local time_taken = tm:time().real / opt.iterations
+local iter_time_taken = tm:time().real / opt.iterations
+local examples_per_sec = 1 / iter_time_taken * opt.batchSize
 
-print(string.format("Arch: %15s      Backend: %10s %25s %10.2f",
-                    opt.network, opt.backend, ':TOTAL (ms) :',
-                    time_taken * 1000))
+print(string.format("Arch: %15s      Batchsize: %8d      Backend: %10s %25s %10.2f %25s %10d",
+                    opt.network, opt.batchSize, opt.backend,
+                    ':Iter (ms) :', iter_time_taken * 1000,
+                    ':exmpl/s (ms) :', examples_per_sec))
 print('')

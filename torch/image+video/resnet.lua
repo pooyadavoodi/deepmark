@@ -7,7 +7,7 @@ local ReLU = nn.ReLU
 local Max = nn.SpatialMaxPooling
 local SBatchNorm = nn.SpatialBatchNormalization
 
-local function createModel(nGPU)
+local function createModel(opt)
    local depth = 50
    local shortcutType = 'B'
    local iChannels
@@ -91,9 +91,14 @@ local function createModel(nGPU)
    model:add(nn.View(nFeatures):setNumInputDims(3))
    model:add(nn.Linear(nFeatures, 1000))
 
+   if opt.nGPU > 1 then
+       local helpers = require("helpers")
+       model = helpers.setMultiGPU(opt, model)
+   end
+
    model:get(1).gradInput = nil
 
-   return model, {64, 3, 224, 224}
+   return model, {3, 224, 224}
 end
 
 return createModel

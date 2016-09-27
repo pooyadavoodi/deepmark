@@ -1,4 +1,4 @@
-local function vgg(nGPU)
+local function vgg(opt)
    local modelType = 'D'
 
    -- Create tables describing VGG configurations A, B, D, E
@@ -30,6 +30,11 @@ local function vgg(nGPU)
       end
    end
 
+   if opt.nGPU > 1 then
+       local helpers = require("helpers")
+       features = helpers.setMultiGPU(opt, features)
+   end
+
    features:get(1).gradInput = nil
 
    local classifier = nn.Sequential()
@@ -45,7 +50,7 @@ local function vgg(nGPU)
    local model = nn.Sequential()
    model:add(features):add(classifier)
 
-   return model, {64,3,224,224}
+   return model, {3,224,224}
 end
 
 return vgg

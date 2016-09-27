@@ -1,6 +1,6 @@
 require 'nn'
 
-local function construct(nGPU)
+local function construct(opt)
    local json = require 'cjson'
    local f = io.open('inceptionv3.json')
    local config_str = f:read("*all")
@@ -69,9 +69,14 @@ local function construct(nGPU)
    net:add(nn.View(-1):setNumInputDims(3))
    net:add(nn.Linear(2048, 1008))
 
+   if opt.nGPU > 1 then
+       local helpers = require("helpers")
+       net = helpers.setMultiGPU(opt, net)
+   end
+
    net.gradInput = nil
 
-   return net, {32, 3, 299, 299}
+   return net, {3, 299, 299}
 end
 
 return construct
